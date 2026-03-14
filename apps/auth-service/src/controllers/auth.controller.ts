@@ -1,11 +1,7 @@
 import bcrypt from "bcryptjs";
 import { Request, Response } from "express";
 import { db } from "@repo/database";
-import {
-  generateAccessToken,
-  generateRefreshToken,
-  verifyRefreshToken,
-} from "../utils/token";
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../utils/token";
 
 const REFRESH_EXPIRES_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -163,6 +159,47 @@ export async function logout(req: Request, res: Response) {
     res.json({
       message: "Logged out successfully",
     });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+}
+
+export async function me(
+  req: Request & { user?: { userId: string } },
+  res: Response
+) {
+  try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
+    }
+
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        avatarUrl: true,
+        emailVerified: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    res.json(user);
   } catch (error) {
     console.error(error);
 
