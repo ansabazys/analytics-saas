@@ -2,6 +2,8 @@ import bcrypt from "bcryptjs";
 import { Request, Response } from "express";
 import { db } from "@repo/database";
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../utils/token";
+import { generateEmailToken } from "../utils/email-token";
+import { generatePasswordResetToken } from "../utils/password-reset-token";
 
 const REFRESH_EXPIRES_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -34,6 +36,19 @@ export async function register(req: Request, res: Response) {
         passwordHash,
       },
     });
+
+    const token = generateEmailToken();
+
+    await db.emailVerificationToken.create({
+      data: {
+        userId: user.id,
+        token,
+        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24), // 24h
+      },
+    });
+
+    const verifyUrl = `http://localhost:3000/verify-email?token=${token}`;
+    console.log("Verify email:", verifyUrl); //later send via email
 
     res.status(201).json({
       message: "User created",
@@ -111,9 +126,7 @@ export async function refreshToken(req: Request, res: Response) {
     const token = req.cookies.refreshToken;
 
     if (!token) {
-      return res.status(401).json({
-        message: "Unauthorized",
-      });
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
     const session = await db.session.findUnique({
@@ -121,24 +134,45 @@ export async function refreshToken(req: Request, res: Response) {
     });
 
     if (!session || session.expiresAt < new Date()) {
-      return res.status(403).json({
-        message: "Invalid refresh token",
-      });
+      return res.status(403).json({ message: "Invalid refresh token" });
     }
 
     const payload = verifyRefreshToken(token);
+
+    // 🔴 delete old session
+    await db.session.delete({
+      where: { refreshToken: token },
+    });
+
+    // 🟢 create new refresh token
+    const newRefreshToken = generateRefreshToken({
+      userId: payload.userId,
+    });
+
+    await db.session.create({
+      data: {
+        userId: payload.userId,
+        refreshToken: newRefreshToken,
+        expiresAt: new Date(Date.now() + REFRESH_EXPIRES_MS),
+      },
+    });
 
     const accessToken = generateAccessToken({
       userId: payload.userId,
     });
 
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/auth/refresh",
+      maxAge: REFRESH_EXPIRES_MS,
+    });
+
     res.json({ accessToken });
   } catch (error) {
     console.error(error);
-
-    res.status(403).json({
-      message: "Invalid refresh token",
-    });
+    res.status(403).json({ message: "Invalid refresh token" });
   }
 }
 
@@ -227,6 +261,129 @@ export async function me(req: Request & { user?: { userId: string } }, res: Resp
     }
 
     res.json(user);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+}
+
+export async function verifyEmail(req: Request, res: Response) {
+  try {
+    const { token } = req.query;
+
+    if (!token || typeof token !== "string") {
+      return res.status(400).json({
+        message: "Invalid token",
+      });
+    }
+
+    const record = await db.emailVerificationToken.findUnique({
+      where: { token },
+    });
+
+    if (!record || record.expiresAt < new Date()) {
+      return res.status(400).json({
+        message: "Token expired or invalid",
+      });
+    }
+
+    await db.user.update({
+      where: { id: record.userId },
+      data: {
+        emailVerified: true,
+      },
+    });
+
+    await db.emailVerificationToken.delete({
+      where: { token },
+    });
+
+    res.json({
+      message: "Email verified successfully",
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+}
+
+
+export async function forgotPassword(req: Request, res: Response) {
+  try {
+    const { email } = req.body;
+
+    const user = await db.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return res.json({
+        message: "If the email exists, a reset link has been sent",
+      });
+    }
+
+    const token = generatePasswordResetToken();
+
+    await db.passwordResetToken.create({
+      data: {
+        userId: user.id,
+        token,
+        expiresAt: new Date(Date.now() + 1000 * 60 * 60), // 1 hour
+      },
+    });
+
+    const resetUrl = `http://localhost:3000/reset-password?token=${token}`;
+
+    console.log("Reset password link:", resetUrl);
+
+    res.json({
+      message: "Password reset link sent",
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+}
+
+export async function resetPassword(req: Request, res: Response) {
+  try {
+    const { token, password } = req.body;
+
+    const record = await db.passwordResetToken.findUnique({
+      where: { token },
+    });
+
+    if (!record || record.expiresAt < new Date()) {
+      return res.status(400).json({
+        message: "Invalid or expired token",
+      });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    await db.user.update({
+      where: { id: record.userId },
+      data: { passwordHash },
+    });
+
+    await db.passwordResetToken.delete({
+      where: { token },
+    });
+
+    res.json({
+      message: "Password reset successfully",
+    });
+
   } catch (error) {
     console.error(error);
 
