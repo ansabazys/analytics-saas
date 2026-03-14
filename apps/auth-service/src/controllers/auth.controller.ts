@@ -1,27 +1,36 @@
 import bcrypt from "bcryptjs";
 import { Request, Response } from "express";
 import { db } from "@repo/database";
-import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../utils/token";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyRefreshToken,
+} from "../utils/token";
+
+const REFRESH_EXPIRES_MS = 7 * 24 * 60 * 60 * 1000;
 
 export async function register(req: Request, res: Response) {
   try {
     const { name, email, password } = req.body;
 
-    // check if user exists
+    if (!email || !password) {
+      return res.status(400).json({
+        message: "Email and password are required",
+      });
+    }
+
     const existingUser = await db.user.findUnique({
       where: { email },
     });
 
     if (existingUser) {
-      return res.status(400).json({
+      return res.status(409).json({
         message: "User already exists",
       });
     }
 
-    // hash password
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // create user
     const user = await db.user.create({
       data: {
         name,
@@ -36,13 +45,14 @@ export async function register(req: Request, res: Response) {
     });
   } catch (error) {
     console.error(error);
+
     res.status(500).json({
       message: "Internal server error",
     });
   }
 }
 
-export const login = async (req: Request, res: Response) => {
+export async function login(req: Request, res: Response) {
   try {
     const { email, password } = req.body;
 
@@ -64,14 +74,19 @@ export const login = async (req: Request, res: Response) => {
       });
     }
 
-    const accessToken = generateAccessToken(user.id);
-    const refreshToken = generateRefreshToken(user.id);
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const refreshToken = generateRefreshToken({
+      userId: user.id,
+    });
 
     await db.session.create({
       data: {
         userId: user.id,
         refreshToken,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        expiresAt: new Date(Date.now() + REFRESH_EXPIRES_MS),
       },
     });
 
@@ -80,63 +95,79 @@ export const login = async (req: Request, res: Response) => {
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       path: "/auth/refresh",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: REFRESH_EXPIRES_MS,
     });
 
     res.json({
       accessToken,
-      refreshToken,
     });
   } catch (error) {
     console.error(error);
+
     res.status(500).json({
       message: "Internal server error",
     });
   }
-};
+}
 
-export const refreshToken = async (req: Request, res: Response) => {
+export async function refreshToken(req: Request, res: Response) {
   try {
-    const refreshToken = req.cookies.refreshToken;
+    const token = req.cookies.refreshToken;
 
-    if (!refreshToken) {
-      return res.status(401).json({ message: "Unauthorized" });
+    if (!token) {
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
     }
 
     const session = await db.session.findUnique({
-      where: { refreshToken },
+      where: { refreshToken: token },
     });
 
-    if (!session) {
+    if (!session || session.expiresAt < new Date()) {
       return res.status(403).json({
         message: "Invalid refresh token",
       });
     }
 
-    const payload = verifyRefreshToken(refreshToken);
+    const payload = verifyRefreshToken(token);
 
-    const accessToken = generateAccessToken(payload.userId);
+    const accessToken = generateAccessToken({
+      userId: payload.userId,
+    });
 
     res.json({ accessToken });
-  } catch {
+  } catch (error) {
+    console.error(error);
+
     res.status(403).json({
       message: "Invalid refresh token",
     });
   }
-};
+}
 
-export const logout = async (req: Request, res: Response) => {
-  const { refreshToken } = req.body;
+export async function logout(req: Request, res: Response) {
+  try {
+    const token = req.cookies.refreshToken;
 
-  await db.session.deleteMany({
-    where: { refreshToken },
-  });
+    if (token) {
+      await db.session.deleteMany({
+        where: { refreshToken: token },
+      });
+    }
 
-  res.clearCookie("refreshToken", {
-    path: "/auth/refresh",
-  });
+    res.clearCookie("refreshToken", {
+      path: "/auth/refresh",
+    });
 
-  res.json({
-    message: "Logged out successfully",
-  });
-};
+    res.json({
+      message: "Logged out successfully",
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+}

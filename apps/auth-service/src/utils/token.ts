@@ -1,14 +1,20 @@
 import jwt from "jsonwebtoken";
 import { env } from "@repo/config";
 
-export function generateAccessToken(userId: string) {
-  return jwt.sign({ userId }, env.JWT_ACCESS_SECRET!, {
+interface JwtPayload {
+  userId: string;
+  email?: string;
+  role?: string;
+}
+
+export function generateAccessToken(payload: JwtPayload) {
+  return jwt.sign(payload, env.JWT_ACCESS_SECRET!, {
     expiresIn: env.ACCESS_TOKEN_EXPIRES as jwt.SignOptions["expiresIn"],
   });
 }
 
-export function generateRefreshToken(userId: string) {
-  return jwt.sign({ userId }, env.JWT_REFRESH_SECRET!, {
+export function generateRefreshToken(payload: { userId: string }) {
+  return jwt.sign(payload, env.JWT_REFRESH_SECRET!, {
     expiresIn: env.REFRESH_TOKEN_EXPIRES as jwt.SignOptions["expiresIn"],
   });
 }

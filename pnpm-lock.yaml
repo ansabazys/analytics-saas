@@ -50,6 +50,9 @@ importers:
       '@repo/database':
         specifier: workspace:^
         version: link:../../packages/database
+      '@repo/sdk':
+        specifier: workspace:^
+        version: link:../../packages/sdk
       bcryptjs:
         specifier: ^3.0.3
         version: 3.0.3
@@ -231,7 +234,24 @@ importers:
         specifier: ^8.50.0
         version: 8.50.0(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
 
-  packages/sdk: {}
+  packages/sdk:
+    dependencies:
+      '@repo/config':
+        specifier: workspace:^
+        version: link:../config
+      express:
+        specifier: ^5.2.1
+        version: 5.2.1
+      jsonwebtoken:
+        specifier: ^9.0.3
+        version: 9.0.3
+    devDependencies:
+      '@types/express':
+        specifier: ^5.0.6
+        version: 5.0.6
+      '@types/jsonwebtoken':
+        specifier: ^9.0.10
+        version: 9.0.10
 
   packages/types: {}
 

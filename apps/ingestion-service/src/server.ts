@@ -1,5 +1,4 @@
 import express, { Request, Response, NextFunction } from "express";
-import { env } from "@repo/config";
 import PinoHttp from "pino-http";
 import { logger } from "./utils/logger";
 
@@ -20,6 +19,8 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   });
 });
 
-app.listen(env.PORT, () => {
-  logger.info(`Ingestion running on port ${env.PORT}`);
+const PORT = process.env.PORT || 4000;
+
+app.listen(PORT, () => {
+  logger.info(`Ingestion running on port ${PORT}`);
 });
