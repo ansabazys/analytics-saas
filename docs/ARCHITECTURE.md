@@ -42,10 +42,10 @@ The dashboard is the frontend application that allows users to view analytics in
 
 Responsibilities:
 
-* Display traffic analytics
-* Visualize visitor trends
-* Show top pages and referrers
-* Provide real-time analytics views
+- Display traffic analytics
+- Visualize visitor trends
+- Show top pages and referrers
+- Provide real-time analytics views
 
 ---
 
@@ -55,10 +55,10 @@ The ingestion service receives analytics events from the client tracking script.
 
 Responsibilities:
 
-* Accept event payloads
-* Validate incoming data
-* Enrich metadata (IP, device, browser)
-* Push events to the processing pipeline
+- Accept event payloads
+- Validate incoming data
+- Enrich metadata (IP, device, browser)
+- Push events to the processing pipeline
 
 ---
 
@@ -68,9 +68,9 @@ The event processor consumes queued events and performs aggregation tasks.
 
 Responsibilities:
 
-* Process raw events
-* Aggregate analytics metrics
-* Prepare analytics data for fast queries
+- Process raw events
+- Aggregate analytics metrics
+- Prepare analytics data for fast queries
 
 ---
 
@@ -80,9 +80,9 @@ The analytics API serves analytics data to the dashboard.
 
 Responsibilities:
 
-* Query aggregated analytics data
-* Provide filtered analytics metrics
-* Serve real-time analytics endpoints
+- Query aggregated analytics data
+- Provide filtered analytics metrics
+- Serve real-time analytics endpoints
 
 ---
 
@@ -92,9 +92,9 @@ Handles user authentication and authorization.
 
 Responsibilities:
 
-* User registration and login
-* Access control
-* API security
+- User registration and login
+- Access control
+- API security
 
 ---
 
@@ -104,10 +104,10 @@ The system is designed to support high traffic workloads by separating responsib
 
 Key strategies:
 
-* Event queueing to handle spikes in traffic
-* Background event processing
-* Optimized analytics queries
-* Service-level scaling
+- Event queueing to handle spikes in traffic
+- Background event processing
+- Optimized analytics queries
+- Service-level scaling
 
 ---
 
@@ -115,22 +115,22 @@ Key strategies:
 
 Frontend
 
-* Next.js
-* React
-* Tailwind CSS
+- Next.js
+- React
+- Tailwind CSS
 
 Backend
 
-* Node.js
-* Express
-* TypeScript
+- Node.js
+- Express
+- TypeScript
 
 Infrastructure
 
-* Docker
-* NGINX
+- Docker
+- NGINX
 
 Data Layer
 
-* PostgreSQL
-* Redis
+- PostgreSQL
+- Redis

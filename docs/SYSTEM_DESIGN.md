@@ -13,16 +13,16 @@ Example integration:
 ```html
 <script src="https://cdn.analytics-saas.com/script.js"></script>
 <script>
-analytics.init("SITE_API_KEY")
+  analytics.init("SITE_API_KEY");
 </script>
 ```
 
 The script captures events such as:
 
-* page views
-* session starts
-* referrer data
-* device information
+- page views
+- session starts
+- referrer data
+- device information
 
 ---
 
@@ -71,9 +71,9 @@ A session starts when a visitor first arrives on the website and ends after a pe
 
 Session metrics include:
 
-* session duration
-* pages per session
-* returning visitor detection
+- session duration
+- pages per session
+- returning visitor detection
 
 ---
 
@@ -81,11 +81,11 @@ Session metrics include:
 
 To improve query performance, events are aggregated into analytics metrics such as:
 
-* total page views
-* unique visitors
-* traffic sources
-* device usage
-* geographic distribution
+- total page views
+- unique visitors
+- traffic sources
+- device usage
+- geographic distribution
 
 Aggregation jobs run periodically to transform raw events into analytics insights.
 
@@ -97,9 +97,9 @@ Real-time analytics is implemented using a streaming mechanism that sends live u
 
 Features include:
 
-* active visitors
-* live page views
-* real-time traffic monitoring
+- active visitors
+- live page views
+- real-time traffic monitoring
 
 ---
 
@@ -107,10 +107,10 @@ Features include:
 
 To ensure scalability:
 
-* events are processed asynchronously
-* analytics queries use aggregated data
-* services can scale independently
-* caching may be used for frequently requested metrics
+- events are processed asynchronously
+- analytics queries use aggregated data
+- services can scale independently
+- caching may be used for frequently requested metrics
 
 ---
 
@@ -118,7 +118,7 @@ To ensure scalability:
 
 Possible future improvements include:
 
-* distributed event streaming
-* advanced analytics queries
-* custom event tracking
-* predictive analytics
+- distributed event streaming
+- advanced analytics queries
+- custom event tracking
+- predictive analytics

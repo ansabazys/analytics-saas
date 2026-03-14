@@ -19,9 +19,7 @@ const envSchema = z.object({
 
   SERVICE_NAME: z.string().default("tracpy-service"),
 
-  LOG_LEVEL: z
-    .enum(["debug", "info", "warn", "error"])
-    .default("info"),
+  LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
 });
 
 const parsed = envSchema.safeParse(process.env);

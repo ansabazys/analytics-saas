@@ -51,31 +51,31 @@ Each component can scale independently to support high traffic workloads.
 
 ### Frontend
 
-* Next.js
-* React
-* Tailwind CSS
+- Next.js
+- React
+- Tailwind CSS
 
 ### Backend
 
-* Node.js
-* Express
-* TypeScript
+- Node.js
+- Express
+- TypeScript
 
 ### Infrastructure
 
-* Docker
-* NGINX
-* Kubernetes
-* Terraform
+- Docker
+- NGINX
+- Kubernetes
+- Terraform
 
 ### Data Layer
 
-* PostgreSQL
-* Redis
+- PostgreSQL
+- Redis
 
 ### Monorepo Management
 
-* Turborepo
+- Turborepo
 
 ---
 
@@ -183,32 +183,32 @@ npm run dev
 
 ### Phase 1 — Foundation
 
-* Monorepo setup
-* Core service scaffolding
-* Environment configuration
+- Monorepo setup
+- Core service scaffolding
+- Environment configuration
 
 ### Phase 2 — Tracking System
 
-* Tracking SDK
-* Event ingestion API
-* Session tracking
+- Tracking SDK
+- Event ingestion API
+- Session tracking
 
 ### Phase 3 — Analytics Engine
 
-* Visitor aggregation
-* Traffic source analysis
-* Device and location analytics
+- Visitor aggregation
+- Traffic source analysis
+- Device and location analytics
 
 ### Phase 4 — Dashboard
 
-* Analytics visualization
-* Traffic charts
-* Page performance insights
+- Analytics visualization
+- Traffic charts
+- Page performance insights
 
 ### Phase 5 — Real-time Analytics
 
-* Active visitor tracking
-* Live event streaming
+- Active visitor tracking
+- Live event streaming
 
 ---
 
@@ -216,11 +216,11 @@ npm run dev
 
 This project demonstrates:
 
-* scalable SaaS system design
-* event-driven analytics pipelines
-* microservice architecture
-* real-time data processing
-* modern full-stack development practices
+- scalable SaaS system design
+- event-driven analytics pipelines
+- microservice architecture
+- real-time data processing
+- modern full-stack development practices
 
 ---
 
