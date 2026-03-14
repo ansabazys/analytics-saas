@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "main": "src/index.ts",
+  "scripts": {
+    "generate": "prisma generate",
+    "build": "prisma generate"
+  },
   "dependencies": {
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
