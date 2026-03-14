@@ -1,5 +1,5 @@
 {
-  "name": "@repo/ingestion-api",
+  "name": "@repo/ingestion-service",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
