@@ -72,3 +72,19 @@ export const getBrowsers = async (req: Request, res: Response, next: NextFunctio
     next(error);
   }
 };
+
+export const getCountries = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const websiteId = req.params.websiteId as string;
+
+    const data = await analyticsService.getCountryAnalytics(websiteId);
+
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};

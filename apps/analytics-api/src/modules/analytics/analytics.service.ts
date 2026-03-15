@@ -66,11 +66,8 @@ export const getTrafficSources = async (websiteId: string) => {
   return result;
 };
 
-
 export const getDeviceAnalytics = async (websiteId: string) => {
-  const result = await db.$queryRaw<
-    { device: string; count: number }[]
-  >`
+  const result = await db.$queryRaw<{ device: string; count: number }[]>`
     SELECT
       COALESCE(device, 'unknown') as device,
       COUNT(*) as count
@@ -85,9 +82,7 @@ export const getDeviceAnalytics = async (websiteId: string) => {
 };
 
 export const getBrowserAnalytics = async (websiteId: string) => {
-  const result = await db.$queryRaw<
-    { browser: string; count: number }[]
-  >`
+  const result = await db.$queryRaw<{ browser: string; count: number }[]>`
     SELECT
       COALESCE(browser, 'unknown') as browser,
       COUNT(*) as count
@@ -95,6 +90,24 @@ export const getBrowserAnalytics = async (websiteId: string) => {
     WHERE "websiteId" = ${websiteId}
       AND event = 'pageview'
     GROUP BY browser
+    ORDER BY count DESC
+  `;
+
+  return result;
+};
+
+
+export const getCountryAnalytics = async (websiteId: string) => {
+  const result = await db.$queryRaw<
+    { country: string; count: number }[]
+  >`
+    SELECT
+      COALESCE(country, 'unknown') as country,
+      COUNT(*) as count
+    FROM "Event"
+    WHERE "websiteId" = ${websiteId}
+      AND event = 'pageview'
+    GROUP BY country
     ORDER BY count DESC
   `;
 
