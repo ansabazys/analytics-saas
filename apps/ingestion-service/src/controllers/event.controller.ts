@@ -4,11 +4,7 @@ import { logger } from "../utils/logger";
 import { eventSchema } from "../validators/event.validator";
 import { detectDevice } from "../utils/device";
 
-export const collectEvent = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const collectEvent = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const parsed = eventSchema.safeParse(req.body);
 
