@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@repo/config": "workspace:*",
+    "@repo/database": "workspace:^",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "pino": "^10.3.1",

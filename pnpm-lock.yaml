@@ -173,6 +173,9 @@ importers:
       '@repo/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@repo/database':
+        specifier: workspace:^
+        version: link:../../packages/database
       cors:
         specifier: ^2.8.6
         version: 2.8.6
