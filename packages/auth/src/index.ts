@@ -1,3 +1,5 @@
+import type {} from "./types/express";
+
 export * from "./middleware/authenticate";
 
 export * from "./utils/signAccessToken";

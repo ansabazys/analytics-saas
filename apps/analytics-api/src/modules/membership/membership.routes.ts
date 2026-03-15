@@ -6,14 +6,68 @@ import {
   updateMemberRoleController,
 } from "./membership.controller";
 
+import { authenticate } from "@repo/auth";
+import { requireOrganizationMember } from "../../middleware/organization-access.middleware";
+import { requireOrganizationAdmin } from "../../middleware/role.middleware";
+import { validate } from "../../middleware/validate.middleware";
+
+import {
+  addMemberSchema,
+  updateMemberRoleSchema,
+  membershipParamSchema,
+} from "../../validators/membership.schema";
+
 const router = Router();
 
-router.get("/:id/members", getMembersController);
+/*
+Get all members of an organization
+*/
+router.get(
+  "/:id/members",
+  authenticate,
+  validate(membershipParamSchema, "params"),
+  requireOrganizationMember,
+  getMembersController
+);
 
-router.post("/:id/members", addMemberController);
+/*
+Add a member to organization
+Only admin/owner allowed
+*/
+router.post(
+  "/:id/members",
+  authenticate,
+  validate(addMemberSchema),
+  requireOrganizationMember,
+  requireOrganizationAdmin,
+  addMemberController
+);
 
-router.patch("/:id/members/:userId", updateMemberRoleController);
+/*
+Update member role
+Only admin/owner allowed
+*/
+router.patch(
+  "/:id/members/:userId",
+  authenticate,
+  validate(membershipParamSchema, "params"),
+  validate(updateMemberRoleSchema),
+  requireOrganizationMember,
+  requireOrganizationAdmin,
+  updateMemberRoleController
+);
 
-router.delete("/:id/members/:userId", removeMemberController);
+/*
+Remove member from organization
+Only admin/owner allowed
+*/
+router.delete(
+  "/:id/members/:userId",
+  authenticate,
+  validate(membershipParamSchema, "params"),
+  requireOrganizationMember,
+  requireOrganizationAdmin,
+  removeMemberController
+);
 
 export default router;

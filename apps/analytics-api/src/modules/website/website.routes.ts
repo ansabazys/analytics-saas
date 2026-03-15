@@ -8,17 +8,87 @@ import {
   updateWebsiteController,
 } from "./website.controller";
 
+import { authenticate } from "@repo/auth";
+import { requireOrganizationMember } from "../../middleware/organization-access.middleware";
+import { requireOrganizationAdmin } from "../../middleware/role.middleware";
+import { validate } from "../../middleware/validate.middleware";
+
+import {
+  createWebsiteSchema,
+  updateWebsiteSchema,
+  websiteIdParamSchema,
+} from "../../validators/website.schema";
+
 const router = express.Router();
 
-router.post("/", createWebsiteController);
+/*
+Create website
+*/
+router.post(
+  "/",
+  authenticate,
+  validate(createWebsiteSchema),
+  requireOrganizationMember,
+  createWebsiteController
+);
 
-router.get("/", getWebsitesController);
-router.get("/:id", getWebsiteController);
+/*
+Get all websites in organization
+Requires ?organizationId query
+*/
+router.get(
+  "/",
+  authenticate,
+  requireOrganizationMember,
+  getWebsitesController
+);
 
-router.patch("/:id", updateWebsiteController);
+/*
+Get single website
+*/
+router.get(
+  "/:id",
+  authenticate,
+  validate(websiteIdParamSchema, "params"),
+  requireOrganizationMember,
+  getWebsiteController
+);
 
-router.delete("/:id", deleteWebsiteController);
+/*
+Update website
+*/
+router.patch(
+  "/:id",
+  authenticate,
+  validate(websiteIdParamSchema, "params"),
+  validate(updateWebsiteSchema),
+  requireOrganizationMember,
+  requireOrganizationAdmin,
+  updateWebsiteController
+);
 
-router.post("/:id/regenerate-key", regenerateWebsiteKeysController);
+/*
+Delete website
+*/
+router.delete(
+  "/:id",
+  authenticate,
+  validate(websiteIdParamSchema, "params"),
+  requireOrganizationMember,
+  requireOrganizationAdmin,
+  deleteWebsiteController
+);
+
+/*
+Regenerate API keys
+*/
+router.post(
+  "/:id/regenerate-key",
+  authenticate,
+  validate(websiteIdParamSchema, "params"),
+  requireOrganizationMember,
+  requireOrganizationAdmin,
+  regenerateWebsiteKeysController
+);
 
 export default router;

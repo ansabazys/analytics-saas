@@ -1,21 +1,19 @@
-import { Request, Response, NextFunction } from "express"
-import { db } from "@repo/database"
-import { ForbiddenError } from "../errors/ForbiddenError"
+import { Request, Response, NextFunction } from "express";
+import { db } from "@repo/database";
+import { ForbiddenError } from "../errors/ForbiddenError";
 
 export const requireOrganizationMember = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
-  const userId = req.user?.userId
+  const userId = req.user?.userId;
 
   const organizationId =
-    req.params.id ||
-    req.body.organizationId ||
-    (req.query.organizationId as string)
+    req.params.id || req.body.organizationId || (req.query.organizationId as string);
 
   if (!userId || !organizationId) {
-    throw new ForbiddenError("Invalid organization access")
+    throw new ForbiddenError("Invalid organization access");
   }
 
   const membership = await db.membership.findFirst({
@@ -23,13 +21,13 @@ export const requireOrganizationMember = async (
       userId,
       organizationId,
     },
-  })
+  });
 
   if (!membership) {
-    throw new ForbiddenError("Access denied to this organization")
+    throw new ForbiddenError("Access denied to this organization");
   }
 
-  req.membership = membership
+  req.membership = membership;
 
-  next()
-}
+  next();
+};

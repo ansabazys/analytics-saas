@@ -7,7 +7,8 @@ import {
   updateOrganization,
 } from "./organization.service";
 import { slugify } from "../../utils/slugify";
-import { NotFoundError } from "../../errors";
+import { NotFoundError, UnauthorizedError } from "../../errors";
+import { nanoid } from "nanoid";
 
 export const createOrganizationController = async (
   req: Request,
@@ -15,11 +16,18 @@ export const createOrganizationController = async (
   next: NextFunction,
 ) => {
   try {
-    const { name, ownerId } = req.body;
+    const { name } = req.body;
 
-    const slug = slugify(name);
+    const userId = req.user?.userId;
 
-    const org = await createOrganization(name, slug, ownerId);
+    if (!userId) {
+      throw new UnauthorizedError("User not authenticated");
+    }
+
+    // generate unique slug
+    const slug = `${slugify(name)}-${nanoid(5)}`;
+
+    const org = await createOrganization(name, slug, userId);
 
     res.status(201).json({
       success: true,

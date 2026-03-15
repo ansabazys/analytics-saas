@@ -4,6 +4,8 @@ import { db } from "@repo/database";
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../utils/token";
 import { generateEmailToken } from "../utils/email-token";
 import { generatePasswordResetToken } from "../utils/password-reset-token";
+import { slugify } from "../utils/slugify";
+import { nanoid } from "nanoid";
 
 const REFRESH_EXPIRES_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -29,30 +31,60 @@ export async function register(req: Request, res: Response) {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    const user = await db.user.create({
-      data: {
-        name,
-        email,
-        passwordHash,
-      },
+    const result = await db.$transaction(async (tx) => {
+      // create user
+      const user = await tx.user.create({
+        data: {
+          name,
+          email,
+          passwordHash,
+        },
+      });
+
+      // default organization
+      const orgName = name ? `${name}'s Workspace` : "My Workspace";
+
+      const slug = `${slugify(orgName)}-${nanoid(4)}`;
+
+      const organization = await tx.organization.create({
+        data: {
+          name: orgName,
+          slug,
+
+          owner: {
+            connect: { id: user.id },
+          },
+
+          memberships: {
+            create: {
+              userId: user.id,
+              role: "owner",
+            },
+          },
+        },
+      });
+
+      // email verification
+      const token = generateEmailToken();
+
+      await tx.emailVerificationToken.create({
+        data: {
+          userId: user.id,
+          token,
+          expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
+        },
+      });
+
+      return { user, organization, token };
     });
 
-    const token = generateEmailToken();
-
-    await db.emailVerificationToken.create({
-      data: {
-        userId: user.id,
-        token,
-        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24), // 24h
-      },
-    });
-
-    const verifyUrl = `http://localhost:3000/verify-email?token=${token}`;
-    console.log("Verify email:", verifyUrl); //later send via email
+    const verifyUrl = `http://localhost:3000/verify-email?token=${result.token}`;
+    console.log("Verify email:", verifyUrl);
 
     res.status(201).json({
       message: "User created",
-      userId: user.id,
+      userId: result.user.id,
+      organizationId: result.organization.id,
     });
   } catch (error) {
     console.error(error);
