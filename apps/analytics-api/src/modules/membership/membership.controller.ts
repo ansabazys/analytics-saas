@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import {
   addMember,
   getOrganizationMembers,
@@ -6,24 +6,30 @@ import {
   updateMemberRole,
 } from "./membership.service";
 
-export const getMembersController = async (req: Request<{ id: string }>, res: Response) => {
+export const getMembersController = async (
+  req: Request<{ id: string }>,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { id } = req.params;
 
     const members = await getOrganizationMembers(id);
 
     res.status(200).json({
+      success: true,
       data: members,
     });
   } catch (error) {
-    res.status(500).json({
-      message: "Failed to fetch members",
-      error,
-    });
+    next(error);
   }
 };
 
-export const addMemberController = async (req: Request<{ id: string }>, res: Response) => {
+export const addMemberController = async (
+  req: Request<{ id: string }>,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { id } = req.params;
     const { userId, role } = req.body;
@@ -31,20 +37,19 @@ export const addMemberController = async (req: Request<{ id: string }>, res: Res
     const member = await addMember(id, userId, role);
 
     res.status(201).json({
+      success: true,
       message: "Member added successfully",
       data: member,
     });
   } catch (error) {
-    res.status(500).json({
-      message: "Failed to add member",
-      error,
-    });
+    next(error);
   }
 };
 
 export const updateMemberRoleController = async (
   req: Request<{ id: string; userId: string }>,
   res: Response,
+  next: NextFunction,
 ) => {
   try {
     const { id, userId } = req.params;
@@ -53,20 +58,19 @@ export const updateMemberRoleController = async (
     const member = await updateMemberRole(id, userId, role);
 
     res.status(200).json({
+      success: true,
       message: "Member role updated successfully",
       data: member,
     });
   } catch (error) {
-    res.status(500).json({
-      message: "Failed to update member role",
-      error,
-    });
+    next(error);
   }
 };
 
 export const removeMemberController = async (
   req: Request<{ id: string; userId: string }>,
   res: Response,
+  next: NextFunction,
 ) => {
   try {
     const { id, userId } = req.params;
@@ -74,12 +78,10 @@ export const removeMemberController = async (
     await removeMember(id, userId);
 
     res.status(200).json({
+      success: true,
       message: "Member removed successfully",
     });
   } catch (error) {
-    res.status(500).json({
-      message: "Failed to remove member",
-      error,
-    });
+    next(error);
   }
 };
