@@ -313,7 +313,6 @@ export async function verifyEmail(req: Request, res: Response) {
   }
 }
 
-
 export async function forgotPassword(req: Request, res: Response) {
   try {
     const { email } = req.body;
@@ -345,7 +344,6 @@ export async function forgotPassword(req: Request, res: Response) {
     res.json({
       message: "Password reset link sent",
     });
-
   } catch (error) {
     console.error(error);
 
@@ -383,7 +381,6 @@ export async function resetPassword(req: Request, res: Response) {
     res.json({
       message: "Password reset successfully",
     });
-
   } catch (error) {
     console.error(error);
 

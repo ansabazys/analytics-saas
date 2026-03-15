@@ -12,8 +12,6 @@ const pool = new Pool({
 
 const adapter = new PrismaPg(pool);
 
-console.log(process.env.DATABASE_URL);
-
 export const db = new PrismaClient({
   adapter,
 });

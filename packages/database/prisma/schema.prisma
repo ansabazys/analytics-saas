@@ -106,6 +106,7 @@ model Event {
 
   @@index([websiteId])
   @@index([createdAt])
+  @@index([websiteId, createdAt])
 }
 
 model Session {
