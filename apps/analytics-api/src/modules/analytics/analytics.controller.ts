@@ -24,3 +24,15 @@ export const getPageViewsByPage = async (req: Request, res: Response, next: Next
     next(error);
   }
 };
+
+export const getUniqueVisitors = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { websiteId } = req.params;
+
+    const data = await analyticsService.getUniqueVisitors(websiteId as string);
+
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};

@@ -33,3 +33,20 @@ export const getPageViewsByPage = async (websiteId: string) => {
     views: p._count.path,
   }));
 };
+
+export const getUniqueVisitors = async (websiteId: string) => {
+  const visitors = await db.event.findMany({
+    where: {
+      websiteId,
+      event: "page_view",
+    },
+    distinct: ["visitorId"],
+    select: {
+      visitorId: true,
+    },
+  });
+
+  return {
+    visitors: visitors.length,
+  };
+};
