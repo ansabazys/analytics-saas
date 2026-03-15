@@ -4,6 +4,8 @@ import cors from "cors";
 import websiteRoutes from "./modules/website/website.routes";
 import organizationRoutes from "./modules/organization/organization.routes";
 import membershipRoutes from "./modules/membership/membership.routes";
+import analyticsRoutes from "./modules/analytics/analytics.routes";
+
 import { errorHandler } from "./middleware/error.middleware";
 
 const app = express();
@@ -21,6 +23,7 @@ app.get("/health", (req, res) => {
 app.use("/websites", websiteRoutes);
 app.use("/organizations", organizationRoutes);
 app.use("/organizations", membershipRoutes);
+app.use("/analytics", analyticsRoutes);
 
 app.use(errorHandler);
 
