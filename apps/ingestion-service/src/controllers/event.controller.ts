@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from "express"
-import { TrackEvent } from "../types/event"
-import { logger } from "../utils/logger"
+import { Request, Response, NextFunction } from "express";
+import { logger } from "../utils/logger";
+import { eventSchema } from "../validators/event.validator";
 
 export const collectEvent = (
   req: Request,
@@ -8,27 +8,30 @@ export const collectEvent = (
   next: NextFunction
 ) => {
   try {
-    const event = req.body as TrackEvent
+    const parsed = eventSchema.safeParse(req.body);
 
-    if (!event || !event.siteId || !event.event || !event.url || !event.timestamp) {
+    if (!parsed.success) {
       return res.status(400).json({
-        error: "Invalid event payload"
-      })
+        error: "Invalid event payload",
+        details: parsed.error.flatten(),
+      });
     }
+
+    const event = parsed.data;
 
     logger.info(
       {
         siteId: event.siteId,
         event: event.event,
-        url: event.url
+        url: event.url,
       },
       "Event received"
-    )
+    );
 
     res.status(202).json({
-      success: true
-    })
+      success: true,
+    });
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};

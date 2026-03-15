@@ -1,8 +1,8 @@
-import { Router } from "express"
-import { collectEvent } from "../controllers/event.controller"
+import { Router } from "express";
+import { collectEvent } from "../controllers/event.controller";
 
-const router = Router()
+const router = Router();
 
-router.post("/collect", collectEvent)
+router.post("/collect", collectEvent);
 
-export default router
+export default router;
