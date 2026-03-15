@@ -7,7 +7,7 @@ export const eventSchema = z.object({
   event: z.string(),
   url: z.string().url(),
   timestamp: z.number(),
-  data: z.record(z.string(), z.unknown()).optional()
-})
+  data: z.record(z.string(), z.unknown()).optional(),
+});
 
 export type EventSchema = z.infer<typeof eventSchema>;

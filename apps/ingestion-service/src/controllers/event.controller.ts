@@ -1,10 +1,14 @@
 import { Request, Response, NextFunction } from "express";
+import { db } from "@repo/database";
 import { logger } from "../utils/logger";
 import { eventSchema } from "../validators/event.validator";
 import { detectDevice } from "../utils/device";
-import { EnrichedEvent } from "../types/event";
 
-export const collectEvent = (req: Request, res: Response, next: NextFunction) => {
+export const collectEvent = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const parsed = eventSchema.safeParse(req.body);
 
@@ -19,16 +23,21 @@ export const collectEvent = (req: Request, res: Response, next: NextFunction) =>
     const userAgent = req.headers["user-agent"];
     const referrer = req.headers["referer"];
 
-    const enrichedEvent: EnrichedEvent = {
-      ...event,
-      ip: req.ip,
-      userAgent,
-      referrer,
-      device: detectDevice(userAgent),
-      receivedAt: Date.now(),
-    };
+    const device = detectDevice(userAgent);
 
-    logger.info(enrichedEvent, "Analytics event received");
+    await db.event.create({
+      data: {
+        websiteId: event.siteId,
+        visitorId: event.visitorId,
+        sessionId: event.sessionId,
+        event: event.event,
+        path: new URL(event.url).pathname,
+        referrer: referrer ?? null,
+        device,
+      },
+    });
+
+    logger.info("Event stored in database");
 
     res.status(202).json({
       success: true,

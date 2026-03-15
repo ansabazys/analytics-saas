@@ -1,13 +1,13 @@
-import { sendEvent } from "./tracker"
-import { getVisitorId } from "./visitor"
-import { getSessionId } from "./session"
-import type { TrackEvent } from "./types"
+import { sendEvent } from "./tracker";
+import { getVisitorId } from "./visitor";
+import { getSessionId } from "./session";
+import type { TrackEvent } from "./types";
 
 export class Tracpy {
-  private siteId: string
+  private siteId: string;
 
   constructor(siteId: string) {
-    this.siteId = siteId
+    this.siteId = siteId;
   }
 
   track(event: string, data?: Record<string, unknown>) {
@@ -18,9 +18,9 @@ export class Tracpy {
       event,
       url: window.location.href,
       timestamp: Date.now(),
-      data
-    }
+      data,
+    };
 
-    sendEvent(payload)
+    sendEvent(payload);
   }
 }
