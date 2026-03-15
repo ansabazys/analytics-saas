@@ -11,7 +11,7 @@ interface AuthPayload {
 export const authenticate = (
   req: Request & { user?: AuthPayload },
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const authHeader = req.headers.authorization;
 
@@ -30,10 +30,7 @@ export const authenticate = (
   }
 
   try {
-    const decoded = jwt.verify(
-      token,
-      env.JWT_ACCESS_SECRET!
-    ) as unknown as AuthPayload;
+    const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET!) as unknown as AuthPayload;
 
     req.user = decoded;
 

@@ -13,31 +13,34 @@ enum Role {
 }
 
 model User {
-  id            String   @id @default(uuid())
-  name          String?
-  email         String   @unique
-  passwordHash  String
-  avatarUrl     String?
+  id           String  @id @default(uuid())
+  name         String?
+  email        String  @unique
+  passwordHash String
+  avatarUrl    String?
 
-  emailVerified Boolean  @default(false)
+  emailVerified Boolean @default(false)
 
-  organizations Organization[]
+  organizations Organization[] @relation("OrganizationOwner")
 
-  memberships   Membership[]
+  memberships Membership[]
+  sessions    Session[]
 
-  sessions      Session[]
+  emailVerificationTokens EmailVerificationToken[]
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  passwordResetTokens PasswordResetToken[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Organization {
-  id        String   @id @default(uuid())
-  name      String
-  slug      String   @unique
+  id   String @id @default(uuid())
+  name String
+  slug String @unique
 
-  ownerId   String
-  owner     User     @relation(fields: [ownerId], references: [id])
+  ownerId String
+  owner   User   @relation("OrganizationOwner", fields: [ownerId], references: [id])
 
   memberships Membership[]
   websites    Website[]
@@ -47,65 +50,99 @@ model Organization {
 }
 
 model Membership {
-  id             String   @id @default(uuid())
+  id String @id @default(uuid())
 
   userId         String
   organizationId String
 
-  role           Role     @default(member)
+  role Role @default(member)
 
-  user           User         @relation(fields: [userId], references: [id])
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
 
-  createdAt      DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@unique([userId, organizationId])
 }
 
 model Website {
-  id             String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  name           String
-  domain         String
+  name   String
+  domain String
 
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id])
 
-  publicKey      String   @unique
-  secretKey      String   @unique
+  publicKey String @unique
+  secretKey String @unique
 
-  events         Event[]
+  events Event[]
 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([organizationId, domain])
 }
 
 model Event {
-  id        String   @id @default(uuid())
+  id String @id @default(uuid())
 
   websiteId String
-  website   Website  @relation(fields: [websiteId], references: [id])
+  website   Website @relation(fields: [websiteId], references: [id])
 
   sessionId String
   visitorId String
 
-  path      String
-  referrer  String?
+  path     String
+  referrer String?
 
-  country   String?
-  device    String?
-  browser   String?
-  os        String?
+  country String?
+  device  String?
+  browser String?
+  os      String?
+
+  createdAt DateTime @default(now())
+
+  @@index([websiteId])
+  @@index([createdAt])
+  @@index([websiteId, createdAt])
+}
+
+model Session {
+  id String @id @default(uuid())
+
+  userId       String
+  refreshToken String @unique
+
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EmailVerificationToken {
+  id String @id @default(uuid())
+
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 }
 
-model Session {
-  id           String   @id @default(uuid())
+model PasswordResetToken {
+  id        String   @id @default(uuid())
 
-  userId       String
-  refreshToken String   @unique
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
 
-  expiresAt    DateTime
-  createdAt    DateTime @default(now())
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
