@@ -1,5 +1,7 @@
-export interface TrackEventPayload {
+export interface TrackEvent {
   siteId: string;
+  visitorId: string;
+  sessionId: string;
   event: string;
   url: string;
   timestamp: number;

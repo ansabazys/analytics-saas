@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
 import PinoHttp from "pino-http";
 import { logger } from "./utils/logger";
+import eventRoutes from "./routes/event.routes";
 
 const app = express();
 
@@ -10,6 +11,9 @@ app.use(express.json());
 app.get("/health", (req: Request, res: Response) => {
   res.json({ status: "ok", service: "ingestion-service" });
 });
+
+/* EVENT ROUTES */
+app.use("/events", eventRoutes);
 
 app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   logger.error(err);

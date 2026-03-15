@@ -1,5 +1,7 @@
 import { sendEvent } from "./tracker";
-import type { TrackEventPayload } from "./types";
+import { getVisitorId } from "./visitor";
+import { getSessionId } from "./session";
+import type { TrackEvent } from "./types";
 
 export class Tracpy {
   private siteId: string;
@@ -8,13 +10,15 @@ export class Tracpy {
     this.siteId = siteId;
   }
 
-  track(event: string, data?: Record<string, unknown>): void {
-    const payload: TrackEventPayload = {
+  track(event: string, data?: Record<string, unknown>) {
+    const payload: TrackEvent = {
       siteId: this.siteId,
+      visitorId: getVisitorId(),
+      sessionId: getSessionId(),
       event,
-      data,
       url: window.location.href,
       timestamp: Date.now(),
+      data,
     };
 
     sendEvent(payload);
