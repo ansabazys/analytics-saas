@@ -27,7 +27,7 @@ router.get(
   authenticate,
   validate(membershipParamSchema, "params"),
   requireOrganizationMember,
-  getMembersController
+  getMembersController,
 );
 
 /*
@@ -40,7 +40,7 @@ router.post(
   validate(addMemberSchema),
   requireOrganizationMember,
   requireOrganizationAdmin,
-  addMemberController
+  addMemberController,
 );
 
 /*
@@ -54,7 +54,7 @@ router.patch(
   validate(updateMemberRoleSchema),
   requireOrganizationMember,
   requireOrganizationAdmin,
-  updateMemberRoleController
+  updateMemberRoleController,
 );
 
 /*
@@ -67,7 +67,7 @@ router.delete(
   validate(membershipParamSchema, "params"),
   requireOrganizationMember,
   requireOrganizationAdmin,
-  removeMemberController
+  removeMemberController,
 );
 
 export default router;

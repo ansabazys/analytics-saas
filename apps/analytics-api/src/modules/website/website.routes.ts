@@ -29,19 +29,14 @@ router.post(
   authenticate,
   validate(createWebsiteSchema),
   requireOrganizationMember,
-  createWebsiteController
+  createWebsiteController,
 );
 
 /*
 Get all websites in organization
 Requires ?organizationId query
 */
-router.get(
-  "/",
-  authenticate,
-  requireOrganizationMember,
-  getWebsitesController
-);
+router.get("/", authenticate, requireOrganizationMember, getWebsitesController);
 
 /*
 Get single website
@@ -51,7 +46,7 @@ router.get(
   authenticate,
   validate(websiteIdParamSchema, "params"),
   requireOrganizationMember,
-  getWebsiteController
+  getWebsiteController,
 );
 
 /*
@@ -64,7 +59,7 @@ router.patch(
   validate(updateWebsiteSchema),
   requireOrganizationMember,
   requireOrganizationAdmin,
-  updateWebsiteController
+  updateWebsiteController,
 );
 
 /*
@@ -76,7 +71,7 @@ router.delete(
   validate(websiteIdParamSchema, "params"),
   requireOrganizationMember,
   requireOrganizationAdmin,
-  deleteWebsiteController
+  deleteWebsiteController,
 );
 
 /*
@@ -88,7 +83,7 @@ router.post(
   validate(websiteIdParamSchema, "params"),
   requireOrganizationMember,
   requireOrganizationAdmin,
-  regenerateWebsiteKeysController
+  regenerateWebsiteKeysController,
 );
 
 export default router;

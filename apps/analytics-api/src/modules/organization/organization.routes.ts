@@ -24,12 +24,7 @@ const router = express.Router();
 Create organization
 Authenticated user creates their own organization
 */
-router.post(
-  "/",
-  authenticate,
-  validate(createOrganizationSchema),
-  createOrganizationController
-);
+router.post("/", authenticate, validate(createOrganizationSchema), createOrganizationController);
 
 /*
 Get all organizations of current user
@@ -45,7 +40,7 @@ router.get(
   authenticate,
   validate(organizationIdParamSchema, "params"),
   requireOrganizationMember,
-  getOrganizationController
+  getOrganizationController,
 );
 
 /*
@@ -59,7 +54,7 @@ router.patch(
   validate(updateOrganizationSchema),
   requireOrganizationMember,
   requireOrganizationAdmin,
-  updateOrganizationController
+  updateOrganizationController,
 );
 
 /*
@@ -72,7 +67,7 @@ router.delete(
   validate(organizationIdParamSchema, "params"),
   requireOrganizationMember,
   requireOrganizationAdmin,
-  deleteOrganizationController
+  deleteOrganizationController,
 );
 
 export default router;
