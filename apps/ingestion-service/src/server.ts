@@ -11,7 +11,7 @@ app.use(
     origin: "*",
     methods: ["POST", "GET", "OPTIONS"],
     allowedHeaders: ["Content-Type"],
-  })
+  }),
 );
 
 app.use(PinoHttp({ logger }));
