@@ -8,7 +8,7 @@ import {
   updateWebsiteController,
 } from "./website.controller";
 
-import { authenticate } from "@repo/auth";
+
 import { requireOrganizationMember } from "../../middleware/organization-access.middleware";
 import { requireOrganizationAdmin } from "../../middleware/role.middleware";
 import { validate } from "../../middleware/validate.middleware";
@@ -18,6 +18,7 @@ import {
   updateWebsiteSchema,
   websiteIdParamSchema,
 } from "../../validators/website.schema";
+import { authenticate } from "../../middleware/authenticate";
 
 const router = express.Router();
 

@@ -6,7 +6,6 @@ import {
   updateMemberRoleController,
 } from "./membership.controller";
 
-import { authenticate } from "@repo/auth";
 import { requireOrganizationMember } from "../../middleware/organization-access.middleware";
 import { requireOrganizationAdmin } from "../../middleware/role.middleware";
 import { validate } from "../../middleware/validate.middleware";
@@ -16,6 +15,7 @@ import {
   updateMemberRoleSchema,
   membershipParamSchema,
 } from "../../validators/membership.schema";
+import { authenticate } from "../../middleware/authenticate";
 
 const router = Router();
 

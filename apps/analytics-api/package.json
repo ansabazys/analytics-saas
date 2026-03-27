@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node-dev -r tsconfig-paths/register src/server.ts",
+"dev": "ts-node-dev --files --respawn --transpile-only -r tsconfig-paths/register src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "lint": "eslint"
@@ -13,17 +13,20 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@repo/auth": "workspace:^",
-    "@repo/config": "workspace:^",
     "@repo/database": "workspace:^",
     "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
     "nanoid": "^5.1.6",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
+    "@types/dotenv": "^8.2.3",
     "@types/express": "^5.0.6",
+    "@types/express-serve-static-core": "^5.1.1",
+    "@types/jsonwebtoken": "^9.0.10",
     "ts-node-dev": "^2.0.0"
   }
 }

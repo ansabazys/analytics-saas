@@ -7,7 +7,7 @@ import {
   updateOrganizationController,
 } from "./organization.controller";
 
-import { authenticate } from "@repo/auth";
+
 import { requireOrganizationMember } from "../../middleware/organization-access.middleware";
 import { requireOrganizationAdmin } from "../../middleware/role.middleware";
 import { validate } from "../../middleware/validate.middleware";
@@ -17,6 +17,7 @@ import {
   updateOrganizationSchema,
   organizationIdParamSchema,
 } from "../../validators/organization.schema";
+import { authenticate } from "../../middleware/authenticate";
 
 const router = express.Router();
 

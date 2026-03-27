@@ -10,7 +10,7 @@ import {
   resetPassword,
   verifyEmail,
 } from "../controllers/auth.controller";
-import { authenticate } from "@repo/auth";
+import { authenticate } from "../middleware/authenticate";
 
 const router = Router();
 

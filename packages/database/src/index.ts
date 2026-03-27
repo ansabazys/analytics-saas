@@ -1,14 +1,17 @@
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { env } from "@repo/config";
+
+if (!process.env.DATABASE_URL) {
+  throw new Error("❌ DATABASE_URL is not defined");
+}
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
 const pool = new Pool({
-  connectionString: env.DATABASE_URL,
+  connectionString: process.env.DATABASE_URL,
   ssl: {
     rejectUnauthorized: false,
   },
@@ -25,3 +28,12 @@ export const db =
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = db;
 }
+
+// ✅ FORCE connection (keeps process alive + surfaces errors)
+db.$connect()
+  .then(() => {
+    console.log("✅ DB connected");
+  })
+  .catch((err) => {
+    console.error("❌ DB connection failed:", err);
+  });

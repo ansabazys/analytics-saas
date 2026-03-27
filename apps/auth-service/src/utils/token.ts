@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
-import { env } from "@repo/config";
+import { env } from "process";
+
 
 interface JwtPayload {
   userId: string;
