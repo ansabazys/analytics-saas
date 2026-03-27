@@ -2,7 +2,6 @@ import { Request, Response, NextFunction } from "express";
 import { AuthPayload } from "../types/auth.types";
 import { verifyToken } from "../utils/verifyToken";
 
-
 export const authenticate = (
   req: Request & { user?: AuthPayload },
   res: Response,

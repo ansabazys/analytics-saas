@@ -8,7 +8,6 @@ import {
   updateWebsiteController,
 } from "./website.controller";
 
-
 import { requireOrganizationMember } from "../../middleware/organization-access.middleware";
 import { requireOrganizationAdmin } from "../../middleware/role.middleware";
 import { validate } from "../../middleware/validate.middleware";

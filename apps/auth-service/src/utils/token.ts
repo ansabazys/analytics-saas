@@ -1,7 +1,6 @@
 import jwt from "jsonwebtoken";
 import { env } from "process";
 
-
 interface JwtPayload {
   userId: string;
   email?: string;
