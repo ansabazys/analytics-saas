@@ -4,16 +4,16 @@
   "private": true,
   "main": "src/index.ts",
   "scripts": {
-    "generate": "prisma generate",
-    "build": "prisma generate && tsc",
-    "postinstall": "prisma generate"
+    "build": "tsc"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.5.0",
-    "@prisma/client": "^7.5.0",
+    "@neondatabase/serverless": "^1.0.2",
     "dotenv": "^17.3.1",
+    "drizzle-orm": "^0.45.1",
     "pg": "^8.20.0",
-    "prisma": "^7.5.0",
     "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.10"
   }
 }

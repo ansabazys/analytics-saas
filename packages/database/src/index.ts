@@ -1,39 +1,35 @@
-import { PrismaClient } from "@prisma/client";
-import { Pool } from "pg";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { drizzle } from "drizzle-orm/neon-http";
+import { neon } from "@neondatabase/serverless";
+import * as schema from "./schema";
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("❌ DATABASE_URL is not defined");
+export { and, desc, eq, sql } from "drizzle-orm";
+
+const DATABASE_URL = process.env.DATABASE_URL;
+
+if (!DATABASE_URL) {
+  throw new Error("DATABASE_URL missing");
 }
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
+/**
+ * 🔥 Neon HTTP client (NO TLS issues)
+ */
+const sql = neon(DATABASE_URL);
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false,
-  },
-});
+/**
+ * ✅ Drizzle instance
+ */
+export const db = drizzle(sql, { schema });
 
-const adapter = new PrismaPg(pool);
+/**
+ * ✅ Test connection
+ */
+(async () => {
+  try {
+    const result = await sql`SELECT 1`;
+    console.log("🟢 DB connected (Neon HTTP)");
+  } catch (err) {
+    console.error("🔴 DB connection failed:", err);
+  }
+})();
 
-export const db =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    adapter,
-  });
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = db;
-}
-
-// ✅ FORCE connection (keeps process alive + surfaces errors)
-db.$connect()
-  .then(() => {
-    console.log("✅ DB connected");
-  })
-  .catch((err) => {
-    console.error("❌ DB connection failed:", err);
-  });
+export * from "./schema";

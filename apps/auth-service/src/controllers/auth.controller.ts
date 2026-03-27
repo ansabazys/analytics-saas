@@ -1,6 +1,15 @@
 import bcrypt from "bcryptjs";
 import { Request, Response } from "express";
-import { db } from "@repo/database";
+import {
+  db,
+  emailVerificationToken,
+  membership,
+  organization,
+  passwordResetToken,
+  eq,
+  session,
+  user,
+} from "@repo/database";
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../utils/token";
 import { generateEmailToken } from "../utils/email-token";
 import { generatePasswordResetToken } from "../utils/password-reset-token";
@@ -19,9 +28,7 @@ export async function register(req: Request, res: Response) {
       });
     }
 
-    const existingUser = await db.user.findUnique({
-      where: { email },
-    });
+    const [existingUser] = await db.select().from(user).where(eq(user.email, email)).limit(1);
 
     if (existingUser) {
       return res.status(409).json({
@@ -31,51 +38,45 @@ export async function register(req: Request, res: Response) {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    const result = await db.$transaction(async (tx) => {
-      // create user
-      const user = await tx.user.create({
-        data: {
+    const result = await db.transaction(async (tx) => {
+      const [createdUser] = await tx
+        .insert(user)
+        .values({
           name,
           email,
           passwordHash,
-        },
-      });
+          updatedAt: new Date(),
+        })
+        .returning();
 
-      // default organization
       const orgName = name ? `${name}'s Workspace` : "My Workspace";
-
       const slug = `${slugify(orgName)}-${nanoid(4)}`;
 
-      const organization = await tx.organization.create({
-        data: {
+      const [createdOrganization] = await tx
+        .insert(organization)
+        .values({
           name: orgName,
           slug,
+          ownerId: createdUser.id,
+          updatedAt: new Date(),
+        })
+        .returning();
 
-          owner: {
-            connect: { id: user.id },
-          },
-
-          memberships: {
-            create: {
-              userId: user.id,
-              role: "owner",
-            },
-          },
-        },
+      await tx.insert(membership).values({
+        userId: createdUser.id,
+        organizationId: createdOrganization.id,
+        role: "owner",
       });
 
-      // email verification
       const token = generateEmailToken();
 
-      await tx.emailVerificationToken.create({
-        data: {
-          userId: user.id,
-          token,
-          expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
-        },
+      await tx.insert(emailVerificationToken).values({
+        userId: createdUser.id,
+        token,
+        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
       });
 
-      return { user, organization, token };
+      return { user: createdUser, organization: createdOrganization, token };
     });
 
     const verifyUrl = `http://localhost:3000/verify-email?token=${result.token}`;
@@ -99,17 +100,15 @@ export async function login(req: Request, res: Response) {
   try {
     const { email, password } = req.body;
 
-    const user = await db.user.findUnique({
-      where: { email },
-    });
+    const [currentUser] = await db.select().from(user).where(eq(user.email, email)).limit(1);
 
-    if (!user) {
+    if (!currentUser) {
       return res.status(401).json({
         message: "Invalid credentials",
       });
     }
 
-    const validPassword = await bcrypt.compare(password, user.passwordHash);
+    const validPassword = await bcrypt.compare(password, currentUser.passwordHash);
 
     if (!validPassword) {
       return res.status(401).json({
@@ -118,19 +117,17 @@ export async function login(req: Request, res: Response) {
     }
 
     const accessToken = generateAccessToken({
-      userId: user.id,
+      userId: currentUser.id,
     });
 
     const refreshToken = generateRefreshToken({
-      userId: user.id,
+      userId: currentUser.id,
     });
 
-    await db.session.create({
-      data: {
-        userId: user.id,
-        refreshToken,
-        expiresAt: new Date(Date.now() + REFRESH_EXPIRES_MS),
-      },
+    await db.insert(session).values({
+      userId: currentUser.id,
+      refreshToken,
+      expiresAt: new Date(Date.now() + REFRESH_EXPIRES_MS),
     });
 
     res.cookie("refreshToken", refreshToken, {
@@ -161,32 +158,28 @@ export async function refreshToken(req: Request, res: Response) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const session = await db.session.findUnique({
-      where: { refreshToken: token },
-    });
+    const [currentSession] = await db
+      .select()
+      .from(session)
+      .where(eq(session.refreshToken, token))
+      .limit(1);
 
-    if (!session || session.expiresAt < new Date()) {
+    if (!currentSession || currentSession.expiresAt < new Date()) {
       return res.status(403).json({ message: "Invalid refresh token" });
     }
 
     const payload = verifyRefreshToken(token);
 
-    // 🔴 delete old session
-    await db.session.delete({
-      where: { refreshToken: token },
-    });
+    await db.delete(session).where(eq(session.refreshToken, token));
 
-    // 🟢 create new refresh token
     const newRefreshToken = generateRefreshToken({
       userId: payload.userId,
     });
 
-    await db.session.create({
-      data: {
-        userId: payload.userId,
-        refreshToken: newRefreshToken,
-        expiresAt: new Date(Date.now() + REFRESH_EXPIRES_MS),
-      },
+    await db.insert(session).values({
+      userId: payload.userId,
+      refreshToken: newRefreshToken,
+      expiresAt: new Date(Date.now() + REFRESH_EXPIRES_MS),
     });
 
     const accessToken = generateAccessToken({
@@ -213,9 +206,7 @@ export async function logout(req: Request, res: Response) {
     const token = req.cookies.refreshToken;
 
     if (token) {
-      await db.session.delete({
-        where: { refreshToken: token },
-      });
+      await db.delete(session).where(eq(session.refreshToken, token));
     }
 
     res.clearCookie("refreshToken", {
@@ -244,9 +235,7 @@ export async function logoutAll(req: Request & { user?: { userId: string } }, re
       });
     }
 
-    await db.session.deleteMany({
-      where: { userId },
-    });
+    await db.delete(session).where(eq(session.userId, userId));
 
     res.clearCookie("refreshToken", {
       path: "/auth/refresh",
@@ -274,25 +263,26 @@ export async function me(req: Request & { user?: { userId: string } }, res: Resp
       });
     }
 
-    const user = await db.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        avatarUrl: true,
-        emailVerified: true,
-        createdAt: true,
-      },
-    });
+    const [currentUser] = await db
+      .select({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        avatarUrl: user.avatarUrl,
+        emailVerified: user.emailVerified,
+        createdAt: user.createdAt,
+      })
+      .from(user)
+      .where(eq(user.id, userId))
+      .limit(1);
 
-    if (!user) {
+    if (!currentUser) {
       return res.status(404).json({
         message: "User not found",
       });
     }
 
-    res.json(user);
+    res.json(currentUser);
   } catch (error) {
     console.error(error);
 
@@ -312,9 +302,11 @@ export async function verifyEmail(req: Request, res: Response) {
       });
     }
 
-    const record = await db.emailVerificationToken.findUnique({
-      where: { token },
-    });
+    const [record] = await db
+      .select()
+      .from(emailVerificationToken)
+      .where(eq(emailVerificationToken.token, token))
+      .limit(1);
 
     if (!record || record.expiresAt < new Date()) {
       return res.status(400).json({
@@ -322,16 +314,15 @@ export async function verifyEmail(req: Request, res: Response) {
       });
     }
 
-    await db.user.update({
-      where: { id: record.userId },
-      data: {
+    await db
+      .update(user)
+      .set({
         emailVerified: true,
-      },
-    });
+        updatedAt: new Date(),
+      })
+      .where(eq(user.id, record.userId));
 
-    await db.emailVerificationToken.delete({
-      where: { token },
-    });
+    await db.delete(emailVerificationToken).where(eq(emailVerificationToken.token, token));
 
     res.json({
       message: "Email verified successfully",
@@ -349,11 +340,9 @@ export async function forgotPassword(req: Request, res: Response) {
   try {
     const { email } = req.body;
 
-    const user = await db.user.findUnique({
-      where: { email },
-    });
+    const [currentUser] = await db.select().from(user).where(eq(user.email, email)).limit(1);
 
-    if (!user) {
+    if (!currentUser) {
       return res.json({
         message: "If the email exists, a reset link has been sent",
       });
@@ -361,12 +350,10 @@ export async function forgotPassword(req: Request, res: Response) {
 
     const token = generatePasswordResetToken();
 
-    await db.passwordResetToken.create({
-      data: {
-        userId: user.id,
-        token,
-        expiresAt: new Date(Date.now() + 1000 * 60 * 60), // 1 hour
-      },
+    await db.insert(passwordResetToken).values({
+      userId: currentUser.id,
+      token,
+      expiresAt: new Date(Date.now() + 1000 * 60 * 60),
     });
 
     const resetUrl = `http://localhost:3000/reset-password?token=${token}`;
@@ -389,9 +376,11 @@ export async function resetPassword(req: Request, res: Response) {
   try {
     const { token, password } = req.body;
 
-    const record = await db.passwordResetToken.findUnique({
-      where: { token },
-    });
+    const [record] = await db
+      .select()
+      .from(passwordResetToken)
+      .where(eq(passwordResetToken.token, token))
+      .limit(1);
 
     if (!record || record.expiresAt < new Date()) {
       return res.status(400).json({
@@ -401,14 +390,12 @@ export async function resetPassword(req: Request, res: Response) {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    await db.user.update({
-      where: { id: record.userId },
-      data: { passwordHash },
-    });
+    await db
+      .update(user)
+      .set({ passwordHash, updatedAt: new Date() })
+      .where(eq(user.id, record.userId));
 
-    await db.passwordResetToken.delete({
-      where: { token },
-    });
+    await db.delete(passwordResetToken).where(eq(passwordResetToken.token, token));
 
     res.json({
       message: "Password reset successfully",

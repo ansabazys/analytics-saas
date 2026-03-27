@@ -1,7 +1,10 @@
 export type User = {
   id: string;
   email: string;
-  firstName: string;
+  name: string | null;
+  avatarUrl?: string | null;
+  emailVerified?: boolean;
+  createdAt?: string;
 };
 
 export type AuthResponse = {

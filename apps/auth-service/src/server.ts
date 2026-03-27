@@ -1,10 +1,15 @@
-import "dotenv/config";
+import * as dotenv from "dotenv";
+
+// ✅ Load env from SAME folder (auth-service)
+dotenv.config();
+
+console.log("ENV:", process.env.DATABASE_URL ? "✔️ loaded" : "❌ missing");
 
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 
 import authRoutes from "./routes/auth.routes";
-import cookieParser from "cookie-parser";
 
 const app = express();
 
@@ -12,17 +17,14 @@ app.use(
   cors({
     origin: "http://localhost:3000",
     credentials: true,
-  }),
+  })
 );
+
 app.use(express.json());
 app.use(cookieParser());
 
-// health check
 app.get("/health", (req, res) => {
-  res.status(200).json({
-    status: "ok",
-    service: "auth-service",
-  });
+  res.json({ status: "ok" });
 });
 
 app.use("/auth", authRoutes);

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { db } from "@repo/database";
+import { and, db, eq, membership } from "@repo/database";
 import { ForbiddenError } from "../errors/ForbiddenError";
 
 export const requireOrganizationMember = async (
@@ -16,18 +16,17 @@ export const requireOrganizationMember = async (
     throw new ForbiddenError("Invalid organization access");
   }
 
-  const membership = await db.membership.findFirst({
-    where: {
-      userId,
-      organizationId,
-    },
-  });
+  const [currentMembership] = await db
+    .select()
+    .from(membership)
+    .where(and(eq(membership.userId, userId), eq(membership.organizationId, organizationId)))
+    .limit(1);
 
-  if (!membership) {
+  if (!currentMembership) {
     throw new ForbiddenError("Access denied to this organization");
   }
 
-  req.membership = membership;
+  req.membership = currentMembership;
 
   next();
 };

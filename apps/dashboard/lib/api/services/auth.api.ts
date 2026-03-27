@@ -10,14 +10,16 @@ export const register = async (data: RegisterInput): Promise<void> => {
 export const login = async (data: LoginInput): Promise<AuthResponse> => {
   const res = await authApi.post<AuthResponse>("/auth/login", data);
   setAccessToken(res.data.accessToken);
-  return res.data;
+  const user = await getCurrentUser();
+  return {
+    accessToken: res.data.accessToken,
+    user,
+  };
 };
 
 export const getCurrentUser = async (): Promise<User> => {
-  const refreshRes = await authApi.post<{ accessToken: string }>("/auth/refresh");
-  setAccessToken(refreshRes.data.accessToken);
-  const meRes = await authProtectedApi.get<{ user: User }>("/auth/me");
-  return meRes.data.user;
+  const res = await authProtectedApi.get<User>("/auth/me");
+  return res.data;
 };
 
 export const logout = async (): Promise<void> => {

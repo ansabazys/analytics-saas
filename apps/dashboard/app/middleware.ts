@@ -6,21 +6,22 @@ export function middleware(req: NextRequest) {
 
   const isAuthPage = pathname.startsWith("/login") || pathname.startsWith("/register");
 
-  const isDashboard = pathname.startsWith("/dashboard");
+  const isProtectedPage =
+    pathname.startsWith("/overview") || pathname.startsWith("/realtime");
 
   const hasRefreshToken = req.cookies.get("refreshToken");
 
-  if (!hasRefreshToken && isDashboard) {
+  if (!hasRefreshToken && isProtectedPage) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
   if (hasRefreshToken && isAuthPage) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+    return NextResponse.redirect(new URL("/overview", req.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/login", "/register"],
+  matcher: ["/overview", "/realtime", "/login", "/register"],
 };

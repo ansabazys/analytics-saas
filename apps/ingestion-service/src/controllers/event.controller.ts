@@ -1,13 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import geoip from "geoip-lite";
-import { db } from "@repo/database";
+import { db, eq, event as eventTable, website } from "@repo/database";
 import { logger } from "../utils/logger";
 import { eventSchema } from "../validators/event.validator";
 import { detectDevice } from "../utils/device";
 
 export const collectEvent = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Validate payload
     const parsed = eventSchema.safeParse(req.body);
 
     if (!parsed.success) {
@@ -21,27 +20,22 @@ export const collectEvent = async (req: Request, res: Response, next: NextFuncti
 
     const event = parsed.data;
 
-    // Check website exists
-    const website = await db.website.findUnique({
-      where: { id: event.siteId },
-      select: { id: true },
-    });
+    const [existingWebsite] = await db
+      .select({ id: website.id })
+      .from(website)
+      .where(eq(website.id, event.siteId))
+      .limit(1);
 
-    if (!website) {
+    if (!existingWebsite) {
       logger.warn(`Invalid websiteId received: ${event.siteId}`);
 
-      // silently ignore invalid events
       return res.status(204).end();
     }
 
-    // Extract headers
     const userAgent = req.headers["user-agent"] ?? "";
     const referrer = req.headers["referer"] ?? null;
-
-    // Detect device/browser/os
     const { device, browser, os } = detectDevice(userAgent);
 
-    // Extract path safely
     let path = "/";
     try {
       path = new URL(event.url).pathname;
@@ -49,7 +43,6 @@ export const collectEvent = async (req: Request, res: Response, next: NextFuncti
       logger.warn("Invalid URL received in event payload");
     }
 
-    // Detect client IP
     let ip =
       (req.headers["x-forwarded-for"] as string)?.split(",")[0] || req.socket.remoteAddress || null;
 
@@ -57,24 +50,20 @@ export const collectEvent = async (req: Request, res: Response, next: NextFuncti
       ip = null;
     }
 
-    // Geo lookup
     const geo = ip ? geoip.lookup(ip) : null;
     const country = geo?.country ?? null;
 
-    // Store event
-    await db.event.create({
-      data: {
-        websiteId: event.siteId,
-        visitorId: event.visitorId,
-        sessionId: event.sessionId,
-        event: event.event,
-        path,
-        referrer,
-        device,
-        browser,
-        os,
-        country,
-      },
+    await db.insert(eventTable).values({
+      websiteId: event.siteId,
+      visitorId: event.visitorId,
+      sessionId: event.sessionId,
+      event: event.event,
+      path,
+      referrer,
+      device,
+      browser,
+      os,
+      country,
     });
 
     logger.info(
