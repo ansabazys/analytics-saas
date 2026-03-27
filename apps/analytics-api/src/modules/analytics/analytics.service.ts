@@ -1,50 +1,37 @@
-import { db } from "@repo/database";
+import { and, db, desc, eq, event, sql } from "@repo/database";
 
 export const getPageViews = async (websiteId: string) => {
-  const total = await db.event.count({
-    where: {
-      websiteId,
-      event: "pageview",
-    },
-  });
+  const [result] = await db
+    .select({
+      total: sql<number>`count(*)::int`,
+    })
+    .from(event)
+    .where(and(eq(event.websiteId, websiteId), eq(event.event, "pageview")));
 
-  return { total };
+  return { total: result?.total ?? 0 };
 };
 
 export const getPageViewsByPage = async (websiteId: string) => {
-  const pages = await db.event.groupBy({
-    by: ["path"],
-    where: {
-      websiteId,
-      event: "pageview",
-    },
-    _count: {
-      path: true,
-    },
-    orderBy: {
-      _count: {
-        path: "desc",
-      },
-    },
-  });
+  const viewCount = sql<number>`count(*)::int`;
 
-  return pages.map((p) => ({
-    path: p.path,
-    views: p._count.path,
-  }));
+  return db
+    .select({
+      path: event.path,
+      views: viewCount,
+    })
+    .from(event)
+    .where(and(eq(event.websiteId, websiteId), eq(event.event, "pageview")))
+    .groupBy(event.path)
+    .orderBy(desc(viewCount));
 };
 
 export const getUniqueVisitors = async (websiteId: string) => {
-  const visitors = await db.event.findMany({
-    where: {
-      websiteId,
-      event: "pageview",
-    },
-    distinct: ["visitorId"],
-    select: {
-      visitorId: true,
-    },
-  });
+  const visitors = await db
+    .selectDistinct({
+      visitorId: event.visitorId,
+    })
+    .from(event)
+    .where(and(eq(event.websiteId, websiteId), eq(event.event, "pageview")));
 
   return {
     visitors: visitors.length,
@@ -52,61 +39,61 @@ export const getUniqueVisitors = async (websiteId: string) => {
 };
 
 export const getTrafficSources = async (websiteId: string) => {
-  const result = await db.$queryRaw<{ source: string; visits: number }[]>`
-    SELECT
-      COALESCE(referrer, 'direct') as source,
-      COUNT(*) as visits
-    FROM "Event"
-    WHERE "websiteId" = ${websiteId}
-      AND event = 'pageview'
-    GROUP BY source
-    ORDER BY visits DESC
-  `;
+  const source = sql<string>`COALESCE(${event.referrer}, 'direct')`;
+  const visits = sql<number>`count(*)::int`;
 
-  return result;
+  return db
+    .select({
+      source,
+      visits,
+    })
+    .from(event)
+    .where(and(eq(event.websiteId, websiteId), eq(event.event, "pageview")))
+    .groupBy(source)
+    .orderBy(desc(visits));
 };
 
 export const getDeviceAnalytics = async (websiteId: string) => {
-  const result = await db.$queryRaw<{ device: string; count: number }[]>`
-    SELECT
-      COALESCE(device, 'unknown') as device,
-      COUNT(*) as count
-    FROM "Event"
-    WHERE "websiteId" = ${websiteId}
-      AND event = 'pageview'
-    GROUP BY device
-    ORDER BY count DESC
-  `;
+  const deviceName = sql<string>`COALESCE(${event.device}, 'unknown')`;
+  const count = sql<number>`count(*)::int`;
 
-  return result;
+  return db
+    .select({
+      device: deviceName,
+      count,
+    })
+    .from(event)
+    .where(and(eq(event.websiteId, websiteId), eq(event.event, "pageview")))
+    .groupBy(deviceName)
+    .orderBy(desc(count));
 };
 
 export const getBrowserAnalytics = async (websiteId: string) => {
-  const result = await db.$queryRaw<{ browser: string; count: number }[]>`
-    SELECT
-      COALESCE(browser, 'unknown') as browser,
-      COUNT(*) as count
-    FROM "Event"
-    WHERE "websiteId" = ${websiteId}
-      AND event = 'pageview'
-    GROUP BY browser
-    ORDER BY count DESC
-  `;
+  const browserName = sql<string>`COALESCE(${event.browser}, 'unknown')`;
+  const count = sql<number>`count(*)::int`;
 
-  return result;
+  return db
+    .select({
+      browser: browserName,
+      count,
+    })
+    .from(event)
+    .where(and(eq(event.websiteId, websiteId), eq(event.event, "pageview")))
+    .groupBy(browserName)
+    .orderBy(desc(count));
 };
 
 export const getCountryAnalytics = async (websiteId: string) => {
-  const result = await db.$queryRaw<{ country: string; count: number }[]>`
-    SELECT
-      COALESCE(country, 'unknown') as country,
-      COUNT(*) as count
-    FROM "Event"
-    WHERE "websiteId" = ${websiteId}
-      AND event = 'pageview'
-    GROUP BY country
-    ORDER BY count DESC
-  `;
+  const countryName = sql<string>`COALESCE(${event.country}, 'unknown')`;
+  const count = sql<number>`count(*)::int`;
 
-  return result;
+  return db
+    .select({
+      country: countryName,
+      count,
+    })
+    .from(event)
+    .where(and(eq(event.websiteId, websiteId), eq(event.event, "pageview")))
+    .groupBy(countryName)
+    .orderBy(desc(count));
 };
