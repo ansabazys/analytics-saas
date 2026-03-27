@@ -67,7 +67,7 @@ export default function Home() {
       </div>
 
       {/* MAP */}
-      <div className="relative w-full flex-1 min-h-[500px] mb-8">
+      <div className="relative w-full flex-1 items-center min-h-[500px] mb-8">
         <OverviewMapOverlay
           totalRequests="115,843,647"
           totalRate="415,534"

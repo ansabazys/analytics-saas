@@ -14,10 +14,8 @@ export const login = async (data: LoginInput): Promise<AuthResponse> => {
 };
 
 export const getCurrentUser = async (): Promise<User> => {
-  const refreshRes = await authApi.post<{ accessToken: string }>("/auth/refresh");
-  setAccessToken(refreshRes.data.accessToken);
-  const meRes = await authProtectedApi.get<{ user: User }>("/auth/me");
-  return meRes.data.user;
+  const res = await authProtectedApi.get<{ user: User }>("/auth/me");
+  return res.data.user;
 };
 
 export const logout = async (): Promise<void> => {
